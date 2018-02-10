@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Built-By: xie
+Class-Path: mina-core-2.0.16.jar slf4j-api-1.7.21.jar slf4j-log4j12-1.
+ 7.21.jar log4j-1.2.17.jar
+Build-Jdk: 1.8.0_144
+Created-By: Maven Integration for Eclipse
+Main-Class: com.memorycat.module.notifier.client.TestUdp1
+
