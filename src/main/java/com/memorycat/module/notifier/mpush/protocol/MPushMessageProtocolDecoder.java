@@ -22,7 +22,7 @@ public class MPushMessageProtocolDecoder implements ProtocolDecoder {
 		int limit = in.limit();
 		byte[] buf = new byte[limit];
 		in.get(buf);
-		if (limit > MPushMessageModelConstants.OFFSET_MESSAGE_BODY) {
+		if (limit >= MPushMessageModelConstants.OFFSET_MESSAGE_BODY) {
 			MPushMessageModel mPushMessageModel = MPushMessageUtil.fromByteArray(buf);
 			if (MPushMessageMd5Coder.verifyMPushMessageMd5Value(mPushMessageModel)) {
 				out.write(mPushMessageModel);

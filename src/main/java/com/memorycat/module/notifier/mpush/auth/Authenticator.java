@@ -1,7 +1,7 @@
 package com.memorycat.module.notifier.mpush.auth;
 
-import com.memorycat.module.notifier.mpush.exception.AuthenticationException;
+import com.memorycat.module.notifier.mpush.exception.auth.AuthenticationException;
 
 public interface Authenticator {
-	Object login() throws AuthenticationException;
+	AuthenticatedResult login() throws AuthenticationException;
 }

@@ -147,10 +147,11 @@ public class MPushMessageModel implements Serializable, Cloneable {
 
 	@Override
 	public String toString() {
-		return "MPushMessageModel [prefix=" + prefix + ", version=" + version + ", messageType=" + messageType
-				+ ", timeStmap=" + timeStmap + ", requestSequence=" + requestSequence + ", responseSequence="
-				+ responseSequence + ", bodyLenth=" + bodyLenth + ", md5Verification="
-				+ Arrays.toString(md5Verification) + ", body=" + Arrays.toString(body) + "]";
+		return "MPushMessageModel [prefix=" + prefix + ", version=" + version + ", messageType="
+				+ (messageType != null ? messageType.name() : MPushMessageType.UNKOWN.name()) + ", timeStmap="
+				+ timeStmap + ", requestSequence=" + requestSequence + ", responseSequence=" + responseSequence
+				+ ", bodyLenth=" + bodyLenth + ", md5Verification=" + Arrays.toString(md5Verification) + ", body="
+				+ Arrays.toString(body) + "]";
 	}
 
 }
