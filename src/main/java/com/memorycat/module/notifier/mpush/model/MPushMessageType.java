@@ -19,7 +19,7 @@ public enum MPushMessageType {
 
 	
 	
-	
+	COMMON_MESSAGE((short)2000),
 	UNKOWN((short) 0);
 
 	private final Short typeCode;

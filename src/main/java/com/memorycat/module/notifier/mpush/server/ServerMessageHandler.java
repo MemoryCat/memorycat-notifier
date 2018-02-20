@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.memorycat.module.notifier.mpush.exception.UnknownRecevicedMessageException;
 import com.memorycat.module.notifier.mpush.model.MPushMessageModel;
 
-public class ServerMessageHandler implements IoHandler {
+  class ServerMessageHandler implements IoHandler {
 
 	private static final Logger logger = LoggerFactory.getLogger(ServerMessageHandler.class);
 	private final MPushMessageServer mPushMessageServer;
@@ -60,7 +60,6 @@ public class ServerMessageHandler implements IoHandler {
 
 	@Override
 	public void messageSent(IoSession session, Object message) throws Exception {
-		// TODO Auto-generated method stub
 
 	}
 

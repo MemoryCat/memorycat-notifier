@@ -29,20 +29,44 @@ public class MPushMessageServerMessageDisptcher {
 		LoginUser loginUser = this.mPushMessageServer.getServerConfiguration().getLoginUserManager()
 				.getLoginUser(context);
 		boolean valid = this.mPushMessageServer.getServerConfiguration().getLoginUserAuthenticator().isValid(loginUser);
-		if (valid == false && mPushMessageModel.getMessageType() != MPushMessageType.AUTH_LOGIN_REQUEST) {
-			this.sendAuthention(context);
+		if (MPushMessageType.AUTH_ENCRYPT_REQUEST == mPushMessageModel.getMessageType()) {
+			loginUser.setClientKey(mPushMessageModel.getBody());
+			this.sendResponseEntryptment(loginUser, mPushMessageModel, context);
+		} else if (null == loginUser.getClientKey() || loginUser.getClientKey().length <= 0) {
+			logger.debug("消息丢弃，应先交换加密密钥：" + mPushMessageModel);
+			this.sendRetryEncryptment(loginUser, context);
+		} else if (valid == false && mPushMessageModel.getMessageType() != MPushMessageType.AUTH_LOGIN_REQUEST) {
+			logger.debug("消息丢弃，应先登录用户认证身份：" + mPushMessageModel);
+			this.sendRetryAuthentication(mPushMessageModel, context);
+		} else if (MPushMessageType.AUTH_LOGIN_REQUEST == mPushMessageModel.getMessageType()) {
+			this.handleLoginRequest(mPushMessageModel, context);
 		} else {
-			MPushMessageType messageType = mPushMessageModel.getMessageType();
-			switch (messageType) {
-			case AUTH_LOGIN_REQUEST:
-				this.handleLoginRequest(mPushMessageModel, context);
+			if ("hehe".equals(new String((byte[]) mPushMessageModel.getBody()))) {
+				this.mPushMessageServer.sendMessage(loginUser, "hahaha");
 			}
-			// TODO
-			// if (this.listeners != null && this.listeners.size() > 0) {
-			// for (MPushMessageListener mPushMessageListener : listeners) {
-			// }
-			// }
+
 		}
+
+	}
+
+	private void sendResponseEntryptment(LoginUser loginUser, MPushMessageModel requestMPushMessageModel,
+			IoSession context) throws MPushMessageException, IOException {
+		MPushMessageModel mPushMessageModel = new MPushMessageModel();
+		mPushMessageModel.setMessageType(MPushMessageType.AUTH_ENCRYPT_RESPONSE);
+		mPushMessageModel.setResponseSequence(
+				this.mPushMessageServer.getServerConfiguration().getResponseSequence().incrementAndGet());
+		mPushMessageModel.setBody(loginUser.getPublicKey());
+		this.mPushMessageServer.sendMessage(loginUser, mPushMessageModel);
+	}
+
+	private void sendRetryEncryptment(LoginUser loginUser, IoSession context)
+			throws MPushMessageException, IOException {
+		logger.trace("sendRetryEncryptment...");
+		MPushMessageModel mPushMessageModel = new MPushMessageModel();
+		mPushMessageModel.setMessageType(MPushMessageType.AUTH_ENCRYPT_RESPONSE_RETRY);
+		mPushMessageModel.setResponseSequence(
+				this.mPushMessageServer.getServerConfiguration().getResponseSequence().incrementAndGet());
+		this.mPushMessageServer.sendMessage(loginUser, mPushMessageModel);
 
 	}
 
@@ -78,21 +102,24 @@ public class MPushMessageServerMessageDisptcher {
 
 	private void sendLoginSuccessfully(LoginUser loginUser, AuthenticatedResult loginResult,
 			MPushMessageModel requestMPushMessageModel) throws MPushMessageException, IOException {
-
 		logger.trace("sendLoginSuccessfully...");
 		MPushMessageModel mPushMessageModel = new MPushMessageModel();
 		mPushMessageModel.setMessageType(MPushMessageType.AUTH_LOGIN_RESPONSE_OK);
-		mPushMessageModel.setRequestSequence(
-				this.mPushMessageServer.getServerConfiguration().getRequestSequence().getAndIncrement());
-		mPushMessageModel.setResponseSequence(requestMPushMessageModel.getRequestSequence());
+		mPushMessageModel.setRequestSequence(requestMPushMessageModel.getRequestSequence());
+		mPushMessageModel.setResponseSequence(
+				this.mPushMessageServer.getServerConfiguration().getResponseSequence().incrementAndGet());
 		mPushMessageModel.setBody(loginResult.toByteArray());
 		this.mPushMessageServer.sendMessage(loginUser, mPushMessageModel);
 	}
 
-	private void sendAuthention(IoSession ioSession) throws MPushMessageException, IOException {
+	private void sendRetryAuthentication(MPushMessageModel requestMPushMessageModel, IoSession ioSession)
+			throws MPushMessageException, IOException {
 		logger.trace("sending:" + MPushMessageType.AUTH_LOGIN_RESPONSE_RETRY.name());
 		MPushMessageModel mPushMessageModel = new MPushMessageModel();
 		mPushMessageModel.setMessageType(MPushMessageType.AUTH_LOGIN_RESPONSE_RETRY);
+		mPushMessageModel.setRequestSequence(requestMPushMessageModel.getRequestSequence());
+		mPushMessageModel.setResponseSequence(
+				this.mPushMessageServer.getServerConfiguration().getResponseSequence().incrementAndGet());
 		this.mPushMessageServer.sendMessage(
 				this.mPushMessageServer.getServerConfiguration().getLoginUserManager().getLoginUser(ioSession),
 				mPushMessageModel);

@@ -1,13 +1,13 @@
 package com.memorycat.module.notifier.mpush.server.config;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.memorycat.module.notifier.mpush.auth.LoginUserAuthenticator;
-import com.memorycat.module.notifier.mpush.listener.MPushMessageListener;
 import com.memorycat.module.notifier.mpush.server.MPushMessageServer;
 import com.memorycat.module.notifier.mpush.server.auth.AuthenticatorServerManger;
+import com.memorycat.module.notifier.mpush.server.listener.MPushServerListener;
 
 public class ServerConfiguration {
 
@@ -15,9 +15,18 @@ public class ServerConfiguration {
 	private LoginUserManager loginUserManager = new LoginUserManager();
 	private AuthenticatorServerManger authenticatorServerManger;
 	private LoginUserAuthenticator loginUserAuthenticator;
-	private AtomicLong requestSequence = new AtomicLong(1L);
-	private AtomicLong responseSequence = new AtomicLong(1L);
-	private List<MPushMessageListener> listeners = new LinkedList<>();
+	private final AtomicLong requestSequence = new AtomicLong(1L);
+	private final AtomicLong responseSequence = new AtomicLong(1L);
+	private final List<MPushServerListener> listeners = new CopyOnWriteArrayList<MPushServerListener>();
+	private final int port;
+
+	public ServerConfiguration(int port) {
+		this.port = port;
+	}
+
+	public int getPort() {
+		return port;
+	}
 
 	public AuthenticatorServerManger getAuthenticatorServerManger() {
 		return authenticatorServerManger;
@@ -55,24 +64,12 @@ public class ServerConfiguration {
 		return requestSequence;
 	}
 
-	public void setRequestSequence(AtomicLong requestSequence) {
-		this.requestSequence = requestSequence;
-	}
-
 	public AtomicLong getResponseSequence() {
 		return responseSequence;
 	}
 
-	public void setResponseSequence(AtomicLong responseSequence) {
-		this.responseSequence = responseSequence;
-	}
-
-	public List<MPushMessageListener> getListeners() {
+	public List<MPushServerListener> getListeners() {
 		return listeners;
-	}
-
-	public void setListeners(List<MPushMessageListener> listeners) {
-		this.listeners = listeners;
 	}
 
 }

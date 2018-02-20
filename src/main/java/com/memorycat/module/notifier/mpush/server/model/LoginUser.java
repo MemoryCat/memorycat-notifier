@@ -1,15 +1,18 @@
 package com.memorycat.module.notifier.mpush.server.model;
 
 import java.io.Serializable;
+import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.memorycat.module.notifier.util.KeyUtil;
+
 /**
  * 登录的用户包含：
  * 
- * 1.公钥和私钥(用户dh密匙交换，加密消息用的)
+ * 1.公钥和私钥和客户端密钥(用户dh密匙交换，加密消息用的)
  * 
  * 2.链接地址（{@link com.memorycat.module.notifier.mpush.server.model.ConnectionAddress}）
  * 
@@ -27,11 +30,16 @@ public class LoginUser implements Serializable {
 	/**
 	 * 私钥
 	 */
-	private byte[] privateKey;
+	private final byte[] privateKey;
 	/**
 	 * 公钥
 	 */
-	private byte[] publicKey;
+	private final byte[] publicKey;
+
+	/**
+	 * 客户端的密钥
+	 */
+	private byte[] clientKey;
 
 	/**
 	 * 链接地址信息
@@ -55,20 +63,19 @@ public class LoginUser implements Serializable {
 	 */
 	private final Map<String, Object> extendProperties = new ConcurrentHashMap<>();
 
+	public LoginUser() {
+		KeyPair keyPair = KeyUtil.getKeyPair();
+		this.publicKey = keyPair.getPublic().getEncoded();
+		this.privateKey = keyPair.getPrivate().getEncoded();
+
+	}
+
 	public byte[] getPrivateKey() {
 		return privateKey;
 	}
 
-	public void setPrivateKey(byte[] privateKey) {
-		this.privateKey = privateKey;
-	}
-
 	public byte[] getPublicKey() {
 		return publicKey;
-	}
-
-	public void setPublicKey(byte[] publicKey) {
-		this.publicKey = publicKey;
 	}
 
 	public ConnectionAddress getConnectionAddress() {
@@ -107,11 +114,20 @@ public class LoginUser implements Serializable {
 		return extendProperties;
 	}
 
+	public byte[] getClientKey() {
+		return clientKey;
+	}
+
+	public void setClientKey(byte[] clientKey) {
+		this.clientKey = clientKey;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((authentication == null) ? 0 : authentication.hashCode());
+		result = prime * result + Arrays.hashCode(clientKey);
 		result = prime * result + ((connectionAddress == null) ? 0 : connectionAddress.hashCode());
 		result = prime * result + ((extendProperties == null) ? 0 : extendProperties.hashCode());
 		result = prime * result + ((loginDevice == null) ? 0 : loginDevice.hashCode());
@@ -134,6 +150,8 @@ public class LoginUser implements Serializable {
 			if (other.authentication != null)
 				return false;
 		} else if (!authentication.equals(other.authentication))
+			return false;
+		if (!Arrays.equals(clientKey, other.clientKey))
 			return false;
 		if (connectionAddress == null) {
 			if (other.connectionAddress != null)
@@ -165,8 +183,9 @@ public class LoginUser implements Serializable {
 	@Override
 	public String toString() {
 		return "LoginUser [privateKey=" + Arrays.toString(privateKey) + ", publicKey=" + Arrays.toString(publicKey)
-				+ ", connectionAddress=" + connectionAddress + ", authentication=" + authentication + ", loginTime="
-				+ loginTime + ", loginDevice=" + loginDevice + ", extendProperties=" + extendProperties + "]";
+				+ ", clientKey=" + Arrays.toString(clientKey) + ", connectionAddress=" + connectionAddress
+				+ ", authentication=" + authentication + ", loginTime=" + loginTime + ", loginDevice=" + loginDevice
+				+ ", extendProperties=" + extendProperties + "]";
 	}
 
 }

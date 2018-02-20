@@ -1,20 +1,38 @@
 package com.memorycat.module.notifier.mpush.client.config;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.mina.core.session.IoSession;
 
-import com.memorycat.module.notifier.mpush.auth.Authenticator;
 import com.memorycat.module.notifier.mpush.client.MPushMessageClient;
-import com.memorycat.module.notifier.mpush.server.model.LoginUser;
+import com.memorycat.module.notifier.mpush.client.listener.MPushClientListener;
+import com.memorycat.module.notifier.mpush.client.model.ClientUser;
 
 public class ClientConfiguration {
 	private MPushMessageClient mPushMessageClient;
-	private LoginUser loginUser;
+	private ClientUser clientUser = new ClientUser();
 	private IoSession ioSession;
-	private Authenticator authenticator;
-	private AtomicLong requestSequence = new AtomicLong(1L);
-	private AtomicLong responseSequence = new AtomicLong(1L);
+	private final AtomicLong requestSequence = new AtomicLong(1L);
+	private final AtomicLong responseSequence = new AtomicLong(1L);
+	private final List<MPushClientListener> listeners = new LinkedList<MPushClientListener>();
+	private final String serverHost;
+	private final int port;
+
+	public ClientConfiguration(String serverHost, int port) {
+		super();
+		this.serverHost = serverHost;
+		this.port = port;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public String getServerHost() {
+		return serverHost;
+	}
 
 	public MPushMessageClient getmPushMessageClient() {
 		return mPushMessageClient;
@@ -22,14 +40,6 @@ public class ClientConfiguration {
 
 	public void setmPushMessageClient(MPushMessageClient mPushMessageClient) {
 		this.mPushMessageClient = mPushMessageClient;
-	}
-
-	public LoginUser getLoginUser() {
-		return loginUser;
-	}
-
-	public void setLoginUser(LoginUser loginUser) {
-		this.loginUser = loginUser;
 	}
 
 	public IoSession getIoSession() {
@@ -40,28 +50,86 @@ public class ClientConfiguration {
 		this.ioSession = ioSession;
 	}
 
-	public Authenticator getAuthenticator() {
-		return authenticator;
-	}
-
-	public void setAuthenticator(Authenticator authenticator) {
-		this.authenticator = authenticator;
-	}
-
 	public AtomicLong getRequestSequence() {
 		return requestSequence;
-	}
-
-	public void setRequestSequence(AtomicLong requestSequence) {
-		this.requestSequence = requestSequence;
 	}
 
 	public AtomicLong getResponseSequence() {
 		return responseSequence;
 	}
 
-	public void setResponseSequence(AtomicLong responseSequence) {
-		this.responseSequence = responseSequence;
+	public List<MPushClientListener> getListeners() {
+		return listeners;
+	}
+
+	public ClientUser getClientUser() {
+		return clientUser;
+	}
+
+	public void setClientUser(ClientUser clientUser) {
+		this.clientUser = clientUser;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((clientUser == null) ? 0 : clientUser.hashCode());
+		result = prime * result + ((ioSession == null) ? 0 : ioSession.hashCode());
+		result = prime * result + ((listeners == null) ? 0 : listeners.hashCode());
+		result = prime * result + ((mPushMessageClient == null) ? 0 : mPushMessageClient.hashCode());
+		result = prime * result + ((requestSequence == null) ? 0 : requestSequence.hashCode());
+		result = prime * result + ((responseSequence == null) ? 0 : responseSequence.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ClientConfiguration other = (ClientConfiguration) obj;
+		if (clientUser == null) {
+			if (other.clientUser != null)
+				return false;
+		} else if (!clientUser.equals(other.clientUser))
+			return false;
+		if (ioSession == null) {
+			if (other.ioSession != null)
+				return false;
+		} else if (!ioSession.equals(other.ioSession))
+			return false;
+		if (listeners == null) {
+			if (other.listeners != null)
+				return false;
+		} else if (!listeners.equals(other.listeners))
+			return false;
+		if (mPushMessageClient == null) {
+			if (other.mPushMessageClient != null)
+				return false;
+		} else if (!mPushMessageClient.equals(other.mPushMessageClient))
+			return false;
+		if (requestSequence == null) {
+			if (other.requestSequence != null)
+				return false;
+		} else if (!requestSequence.equals(other.requestSequence))
+			return false;
+		if (responseSequence == null) {
+			if (other.responseSequence != null)
+				return false;
+		} else if (!responseSequence.equals(other.responseSequence))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "ClientConfiguration [mPushMessageClient=" + mPushMessageClient + ", clientUser=" + clientUser
+				+ ", ioSession=" + ioSession + ", requestSequence=" + requestSequence + ", responseSequence="
+				+ responseSequence + ", listeners=" + listeners + "]";
 	}
 
 }

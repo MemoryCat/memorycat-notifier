@@ -13,12 +13,12 @@ import org.slf4j.LoggerFactory;
 import com.memorycat.module.notifier.mpush.auth.AuthenticatedResult;
 import com.memorycat.module.notifier.mpush.auth.Authenticator;
 import com.memorycat.module.notifier.mpush.client.config.ClientConfiguration;
+import com.memorycat.module.notifier.mpush.client.protocol.MPushMessageClientProtocolFactory;
 import com.memorycat.module.notifier.mpush.exception.MPushMessageException;
 import com.memorycat.module.notifier.mpush.exception.UnknownPreparedSendMessageException;
 import com.memorycat.module.notifier.mpush.exception.auth.AuthenticationException;
 import com.memorycat.module.notifier.mpush.model.MPushMessageModel;
 import com.memorycat.module.notifier.mpush.model.MPushMessageType;
-import com.memorycat.module.notifier.mpush.protocol.MPushMessageProtocolFactory;
 
 public class MPushMessageClientImpl implements MPushMessageClient {
 	private static final Logger logger = LoggerFactory.getLogger(MPushMessageClientImpl.class);
@@ -35,9 +35,10 @@ public class MPushMessageClientImpl implements MPushMessageClient {
 		nioDatagramConnector.getSessionConfig().setReuseAddress(true);
 		nioDatagramConnector.getFilterChain().addFirst("log", new LoggingFilter());
 		nioDatagramConnector.getFilterChain().addLast("codec",
-				new ProtocolCodecFilter(new MPushMessageProtocolFactory()));
+				new ProtocolCodecFilter(new MPushMessageClientProtocolFactory(this.clientConfiguration)));
 		nioDatagramConnector.setHandler(new ClientMessageHandler(this));
-		ConnectFuture connectFuture = nioDatagramConnector.connect(new InetSocketAddress("localhost", 12345));
+		ConnectFuture connectFuture = nioDatagramConnector.connect(
+				new InetSocketAddress(this.clientConfiguration.getServerHost(), this.clientConfiguration.getPort()));
 		try {
 			connectFuture.await();
 		} catch (InterruptedException e) {
@@ -47,19 +48,10 @@ public class MPushMessageClientImpl implements MPushMessageClient {
 		logger.debug("client is running");
 	}
 
-	private void login() throws MPushMessageException, IOException {
-		MPushMessageModel mPushMessageModel = new MPushMessageModel();
-		mPushMessageModel.setMessageType(MPushMessageType.AUTH_LOGIN_REQUEST);
-		mPushMessageModel.setBody(this.getClientConfiguration().getAuthenticator().login().toByteArray());
-		mPushMessageModel.setRequestSequence(this.getClientConfiguration().getRequestSequence().getAndIncrement());
-		mPushMessageModel.setResponseSequence(0);
-		mPushMessageModel.setBodyLenth((short) mPushMessageModel.getBody().length);
-		this.sendMessage(mPushMessageModel);
-	}
-
 	@Override
 	public MPushMessageModel sendMessage(Object message) throws MPushMessageException, IOException {
 		MPushMessageModel mPushMessageModel = new MPushMessageModel();
+		mPushMessageModel.setMessageType(MPushMessageType.COMMON_MESSAGE);
 		if (message instanceof MPushMessageModel) {
 			mPushMessageModel = (MPushMessageModel) message;
 		} else if (message instanceof String) {
@@ -67,7 +59,7 @@ public class MPushMessageClientImpl implements MPushMessageClient {
 		} else if (message instanceof byte[]) {
 			mPushMessageModel.setBody((byte[]) message);
 		} else {
-			throw new UnknownPreparedSendMessageException(this.getClientConfiguration().getLoginUser(), message);
+			throw new UnknownPreparedSendMessageException(this.getClientConfiguration().getClientUser(), message);
 		}
 		this.getClientConfiguration().getIoSession().write(mPushMessageModel);
 		return mPushMessageModel;
@@ -79,8 +71,8 @@ public class MPushMessageClientImpl implements MPushMessageClient {
 	}
 
 	public static void main(String[] args) throws MPushMessageException, IOException {
-		ClientConfiguration clientConfiguration = new ClientConfiguration();
-		clientConfiguration.setAuthenticator(new Authenticator() {
+		ClientConfiguration clientConfiguration = new ClientConfiguration("localhost", 12345);
+		clientConfiguration.getClientUser().setAuthenticator(new Authenticator() {
 			@Override
 			public AuthenticatedResult login() throws AuthenticationException {
 				return new AuthenticatedResult() {
@@ -93,6 +85,6 @@ public class MPushMessageClientImpl implements MPushMessageClient {
 		});
 		MPushMessageClientImpl mPushMessageClientImpl = new MPushMessageClientImpl(clientConfiguration);
 		clientConfiguration.setmPushMessageClient(mPushMessageClientImpl);
-		mPushMessageClientImpl.login();
+		mPushMessageClientImpl.sendMessage("hello".getBytes());
 	}
 }

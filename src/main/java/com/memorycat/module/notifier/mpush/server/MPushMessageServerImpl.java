@@ -14,12 +14,12 @@ import com.memorycat.module.notifier.mpush.auth.LoginUserAuthenticator;
 import com.memorycat.module.notifier.mpush.exception.MPushMessageException;
 import com.memorycat.module.notifier.mpush.exception.UnknownPreparedSendMessageException;
 import com.memorycat.module.notifier.mpush.model.MPushMessageModel;
-import com.memorycat.module.notifier.mpush.protocol.MPushMessageProtocolFactory;
 import com.memorycat.module.notifier.mpush.server.auth.AuthenticatorServerManger;
 import com.memorycat.module.notifier.mpush.server.auth.UserAndPasswordAuthenticator;
 import com.memorycat.module.notifier.mpush.server.config.LoginUserManager;
 import com.memorycat.module.notifier.mpush.server.config.ServerConfiguration;
 import com.memorycat.module.notifier.mpush.server.model.LoginUser;
+import com.memorycat.module.notifier.mpush.server.protocol.MPushMessageServerProtocolFactory;
 
 public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 	private static final Logger logger = LoggerFactory.getLogger(MPushMessageServerImpl.class);
@@ -37,10 +37,10 @@ public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 			nioDatagramAcceptor.getFilterChain().addLast("logger", new LoggingFilter());
 
 			nioDatagramAcceptor.getFilterChain().addLast("codec",
-					new ProtocolCodecFilter(new MPushMessageProtocolFactory()));
+					new ProtocolCodecFilter(new MPushMessageServerProtocolFactory(this.serverConfiguration)));
 
 			nioDatagramAcceptor.setHandler(new ServerMessageHandler(this));
-			nioDatagramAcceptor.setDefaultLocalAddress(new InetSocketAddress(12345));
+			nioDatagramAcceptor.setDefaultLocalAddress(new InetSocketAddress(this.serverConfiguration.getPort()));
 			nioDatagramAcceptor.bind();
 
 		} catch (Exception e) {
@@ -88,7 +88,7 @@ public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-		ServerConfiguration serverConfiguration = new ServerConfiguration();
+		ServerConfiguration serverConfiguration = new ServerConfiguration(12345);
 		serverConfiguration.setLoginUserManager(new LoginUserManager());
 		serverConfiguration.setLoginUserAuthenticator(new LoginUserAuthenticator());
 		AuthenticatorServerManger authenticatorServerManger = new AuthenticatorServerManger();
