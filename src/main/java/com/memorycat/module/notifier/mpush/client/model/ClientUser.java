@@ -2,6 +2,8 @@ package com.memorycat.module.notifier.mpush.client.model;
 
 import java.io.Serializable;
 import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -14,8 +16,8 @@ public class ClientUser implements Serializable {
 
 	private static final long serialVersionUID = 4675322149657022508L;
 
-	private final byte[] publicKey;
-	private final byte[] privateKey;
+	private final PublicKey publicKey;
+	private final PrivateKey privateKey;
 	private byte[] serverKey;
 	private Authenticator authenticator;
 	// private Object serverAuthentication;
@@ -24,15 +26,15 @@ public class ClientUser implements Serializable {
 
 	public ClientUser() {
 		KeyPair keyPair = KeyUtil.getKeyPair();
-		this.publicKey = keyPair.getPublic().getEncoded();
-		this.privateKey = keyPair.getPrivate().getEncoded();
+		this.publicKey = keyPair.getPublic();
+		this.privateKey = keyPair.getPrivate();
 	}
 
-	public byte[] getPublicKey() {
+	public PublicKey getPublicKey() {
 		return publicKey;
 	}
 
-	public byte[] getPrivateKey() {
+	public PrivateKey getPrivateKey() {
 		return privateKey;
 	}
 
@@ -71,8 +73,8 @@ public class ClientUser implements Serializable {
 		result = prime * result + ((authenticator == null) ? 0 : authenticator.hashCode());
 		result = prime * result + ((extendProperties == null) ? 0 : extendProperties.hashCode());
 		result = prime * result + ((loginDate == null) ? 0 : loginDate.hashCode());
-		result = prime * result + Arrays.hashCode(privateKey);
-		result = prime * result + Arrays.hashCode(publicKey);
+		result = prime * result + ((privateKey == null) ? 0 : privateKey.hashCode());
+		result = prime * result + ((publicKey == null) ? 0 : publicKey.hashCode());
 		result = prime * result + Arrays.hashCode(serverKey);
 		return result;
 	}
@@ -101,9 +103,15 @@ public class ClientUser implements Serializable {
 				return false;
 		} else if (!loginDate.equals(other.loginDate))
 			return false;
-		if (!Arrays.equals(privateKey, other.privateKey))
+		if (privateKey == null) {
+			if (other.privateKey != null)
+				return false;
+		} else if (!privateKey.equals(other.privateKey))
 			return false;
-		if (!Arrays.equals(publicKey, other.publicKey))
+		if (publicKey == null) {
+			if (other.publicKey != null)
+				return false;
+		} else if (!publicKey.equals(other.publicKey))
 			return false;
 		if (!Arrays.equals(serverKey, other.serverKey))
 			return false;
@@ -112,9 +120,9 @@ public class ClientUser implements Serializable {
 
 	@Override
 	public String toString() {
-		return "ClientUser [publicKey=" + Arrays.toString(publicKey) + ", privateKey=" + Arrays.toString(privateKey)
-				+ ", serverKey=" + Arrays.toString(serverKey) + ", authenticator=" + authenticator + ", loginDate="
-				+ loginDate + ", extendProperties=" + extendProperties + "]";
+		return "ClientUser [publicKey=" + publicKey + ", privateKey=" + privateKey + ", serverKey="
+				+ Arrays.toString(serverKey) + ", authenticator=" + authenticator + ", loginDate=" + loginDate
+				+ ", extendProperties=" + extendProperties + "]";
 	}
 
 }

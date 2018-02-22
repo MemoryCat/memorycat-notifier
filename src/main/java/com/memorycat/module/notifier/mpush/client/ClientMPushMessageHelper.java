@@ -9,10 +9,16 @@ public class ClientMPushMessageHelper {
 	public static MPushMessageModel login(ClientConfiguration clientConfiguration) {
 		MPushMessageModel mPushMessageModel = new MPushMessageModel();
 		mPushMessageModel.setMessageType(MPushMessageType.AUTH_LOGIN_REQUEST);
-		mPushMessageModel.setBody(clientConfiguration.getClientUser().getAuthenticator().login().toByteArray());
 		mPushMessageModel.setRequestSequence(clientConfiguration.getRequestSequence().getAndIncrement());
-		mPushMessageModel.setResponseSequence(0);
-		mPushMessageModel.setBodyLenth((short) mPushMessageModel.getBody().length);
+		mPushMessageModel.setBody(clientConfiguration.getClientUser().getAuthenticator().login().toByteArray());
+		return mPushMessageModel;
+	}
+
+	public static MPushMessageModel requestEncrypt(ClientConfiguration clientConfiguration) {
+		MPushMessageModel mPushMessageModel = new MPushMessageModel();
+		mPushMessageModel.setMessageType(MPushMessageType.AUTH_ENCRYPT_REQUEST);
+		mPushMessageModel.setRequestSequence(clientConfiguration.getRequestSequence().getAndIncrement());
+		mPushMessageModel.setBody(clientConfiguration.getClientUser().getPublicKey().getEncoded());
 		return mPushMessageModel;
 	}
 }

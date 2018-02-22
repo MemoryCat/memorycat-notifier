@@ -50,16 +50,19 @@ public class MPushMessageClientImpl implements MPushMessageClient {
 
 	@Override
 	public MPushMessageModel sendMessage(Object message) throws MPushMessageException, IOException {
-		MPushMessageModel mPushMessageModel = new MPushMessageModel();
-		mPushMessageModel.setMessageType(MPushMessageType.COMMON_MESSAGE);
+		MPushMessageModel mPushMessageModel = null;
 		if (message instanceof MPushMessageModel) {
 			mPushMessageModel = (MPushMessageModel) message;
-		} else if (message instanceof String) {
-			mPushMessageModel.setBody(((String) message).getBytes());
-		} else if (message instanceof byte[]) {
-			mPushMessageModel.setBody((byte[]) message);
 		} else {
-			throw new UnknownPreparedSendMessageException(this.getClientConfiguration().getClientUser(), message);
+			mPushMessageModel = new MPushMessageModel();
+			mPushMessageModel.setMessageType(MPushMessageType.COMMON_MESSAGE);
+			if (message instanceof String) {
+				mPushMessageModel.setBody(((String) message).getBytes());
+			} else if (message instanceof byte[]) {
+				mPushMessageModel.setBody((byte[]) message);
+			} else {
+				throw new UnknownPreparedSendMessageException(this.getClientConfiguration().getClientUser(), message);
+			}
 		}
 		this.getClientConfiguration().getIoSession().write(mPushMessageModel);
 		return mPushMessageModel;

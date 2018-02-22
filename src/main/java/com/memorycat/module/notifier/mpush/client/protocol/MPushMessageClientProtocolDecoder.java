@@ -8,10 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.memorycat.module.notifier.mpush.client.config.ClientConfiguration;
+import com.memorycat.module.notifier.mpush.client.model.ClientUser;
 import com.memorycat.module.notifier.mpush.exception.MPushMessageDecodeException;
 import com.memorycat.module.notifier.mpush.model.MPushMessageModel;
+import com.memorycat.module.notifier.mpush.model.MPushMessageType;
 import com.memorycat.module.notifier.mpush.util.MPushMessageMd5Coder;
 import com.memorycat.module.notifier.mpush.util.MPushMessageUtil;
+import com.memorycat.module.notifier.util.DhEncryptUtil;
 import com.memorycat.module.notifier.util.MPushMessageModelConstants;
 
 class MPushMessageClientProtocolDecoder implements ProtocolDecoder {
@@ -32,7 +35,18 @@ class MPushMessageClientProtocolDecoder implements ProtocolDecoder {
 		if (limit >= MPushMessageModelConstants.OFFSET_MESSAGE_BODY) {
 			MPushMessageModel mPushMessageModel = MPushMessageUtil.fromByteArray(buf);
 			if (MPushMessageMd5Coder.verifyMPushMessageMd5Value(mPushMessageModel)) {
+
+				if (mPushMessageModel.getMessageType() != MPushMessageType.AUTH_ENCRYPT_RESPONSE
+						&& mPushMessageModel.getMessageType() != MPushMessageType.AUTH_ENCRYPT_RESPONSE_RETRY) {
+					byte[] body = mPushMessageModel.getBody();
+					ClientUser clientUser = clientConfiguration.getClientUser();
+					byte[] decode = DhEncryptUtil.decode(clientUser.getServerKey(), clientUser.getPrivateKey(), body);
+					mPushMessageModel.setBody(decode);
+					mPushMessageModel.setBodyLenth((short) decode.length);
+				}
+
 				out.write(mPushMessageModel);
+				return;
 			} else {
 				String msg = "数据包md5校验不正确，丢弃数据：" + new String(buf);
 				logger.info(msg);

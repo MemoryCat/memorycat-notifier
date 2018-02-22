@@ -2,6 +2,8 @@ package com.memorycat.module.notifier.mpush.server.model;
 
 import java.io.Serializable;
 import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -28,13 +30,13 @@ public class LoginUser implements Serializable {
 	private static final long serialVersionUID = -5376017400205035550L;
 
 	/**
-	 * 私钥
-	 */
-	private final byte[] privateKey;
-	/**
 	 * 公钥
 	 */
-	private final byte[] publicKey;
+	private final PublicKey publicKey;
+	/**
+	 * 私钥
+	 */
+	private final PrivateKey privateKey;
 
 	/**
 	 * 客户端的密钥
@@ -65,17 +67,17 @@ public class LoginUser implements Serializable {
 
 	public LoginUser() {
 		KeyPair keyPair = KeyUtil.getKeyPair();
-		this.publicKey = keyPair.getPublic().getEncoded();
-		this.privateKey = keyPair.getPrivate().getEncoded();
+		this.publicKey = keyPair.getPublic();
+		this.privateKey = keyPair.getPrivate();
 
 	}
 
-	public byte[] getPrivateKey() {
-		return privateKey;
-	}
-
-	public byte[] getPublicKey() {
+	public PublicKey getPublicKey() {
 		return publicKey;
+	}
+
+	public PrivateKey getPrivateKey() {
+		return privateKey;
 	}
 
 	public ConnectionAddress getConnectionAddress() {
@@ -132,8 +134,8 @@ public class LoginUser implements Serializable {
 		result = prime * result + ((extendProperties == null) ? 0 : extendProperties.hashCode());
 		result = prime * result + ((loginDevice == null) ? 0 : loginDevice.hashCode());
 		result = prime * result + ((loginTime == null) ? 0 : loginTime.hashCode());
-		result = prime * result + Arrays.hashCode(privateKey);
-		result = prime * result + Arrays.hashCode(publicKey);
+		result = prime * result + ((privateKey == null) ? 0 : privateKey.hashCode());
+		result = prime * result + ((publicKey == null) ? 0 : publicKey.hashCode());
 		return result;
 	}
 
@@ -173,19 +175,25 @@ public class LoginUser implements Serializable {
 				return false;
 		} else if (!loginTime.equals(other.loginTime))
 			return false;
-		if (!Arrays.equals(privateKey, other.privateKey))
+		if (privateKey == null) {
+			if (other.privateKey != null)
+				return false;
+		} else if (!privateKey.equals(other.privateKey))
 			return false;
-		if (!Arrays.equals(publicKey, other.publicKey))
+		if (publicKey == null) {
+			if (other.publicKey != null)
+				return false;
+		} else if (!publicKey.equals(other.publicKey))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "LoginUser [privateKey=" + Arrays.toString(privateKey) + ", publicKey=" + Arrays.toString(publicKey)
-				+ ", clientKey=" + Arrays.toString(clientKey) + ", connectionAddress=" + connectionAddress
-				+ ", authentication=" + authentication + ", loginTime=" + loginTime + ", loginDevice=" + loginDevice
-				+ ", extendProperties=" + extendProperties + "]";
+		return "LoginUser [publicKey=" + publicKey + ", privateKey=" + privateKey + ", clientKey="
+				+ Arrays.toString(clientKey) + ", connectionAddress=" + connectionAddress + ", authentication="
+				+ authentication + ", loginTime=" + loginTime + ", loginDevice=" + loginDevice + ", extendProperties="
+				+ extendProperties + "]";
 	}
 
 }

@@ -151,7 +151,7 @@ public class MPushMessageModel implements Serializable, Cloneable {
 				+ (messageType != null ? messageType.name() : MPushMessageType.UNKOWN.name()) + ", timeStmap="
 				+ timeStmap + ", requestSequence=" + requestSequence + ", responseSequence=" + responseSequence
 				+ ", bodyLenth=" + bodyLenth + ", md5Verification=" + Arrays.toString(md5Verification) + ", body="
-				+ Arrays.toString(body) + "]";
+				+ Arrays.toString(body) + "]("+new String(body)+")";
 	}
 
 }

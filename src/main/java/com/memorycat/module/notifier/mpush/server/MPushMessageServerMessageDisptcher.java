@@ -42,31 +42,21 @@ public class MPushMessageServerMessageDisptcher {
 			this.handleLoginRequest(mPushMessageModel, context);
 		} else {
 			if ("hehe".equals(new String((byte[]) mPushMessageModel.getBody()))) {
-				this.mPushMessageServer.sendMessage(loginUser, "hahaha");
+				this.mPushMessageServer.sendMessage(loginUser, "haha");
 			}
-
 		}
-
 	}
 
 	private void sendResponseEntryptment(LoginUser loginUser, MPushMessageModel requestMPushMessageModel,
 			IoSession context) throws MPushMessageException, IOException {
-		MPushMessageModel mPushMessageModel = new MPushMessageModel();
-		mPushMessageModel.setMessageType(MPushMessageType.AUTH_ENCRYPT_RESPONSE);
-		mPushMessageModel.setResponseSequence(
-				this.mPushMessageServer.getServerConfiguration().getResponseSequence().incrementAndGet());
-		mPushMessageModel.setBody(loginUser.getPublicKey());
-		this.mPushMessageServer.sendMessage(loginUser, mPushMessageModel);
+		this.mPushMessageServer.sendMessage(loginUser, ServerMPushMessageHelper
+				.responseEntrycptment(this.mPushMessageServer.getServerConfiguration(), loginUser));
 	}
 
 	private void sendRetryEncryptment(LoginUser loginUser, IoSession context)
 			throws MPushMessageException, IOException {
-		logger.trace("sendRetryEncryptment...");
-		MPushMessageModel mPushMessageModel = new MPushMessageModel();
-		mPushMessageModel.setMessageType(MPushMessageType.AUTH_ENCRYPT_RESPONSE_RETRY);
-		mPushMessageModel.setResponseSequence(
-				this.mPushMessageServer.getServerConfiguration().getResponseSequence().incrementAndGet());
-		this.mPushMessageServer.sendMessage(loginUser, mPushMessageModel);
+		this.mPushMessageServer.sendMessage(loginUser, ServerMPushMessageHelper
+				.retryEntrycptment(this.mPushMessageServer.getServerConfiguration(), loginUser));
 
 	}
 

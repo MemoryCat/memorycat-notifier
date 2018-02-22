@@ -29,46 +29,48 @@ public class MPushMessageClientMessageDisptcher {
 		logger.trace("dispatching message:" + mPushMessageModel);
 
 		if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_ENCRYPT_RESPONSE_RETRY) {
-			this.sendRequestEnctryptment(mPushMessageModel);
+			this.sendRequestEnctryptment();
+			return;
 		} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_ENCRYPT_RESPONSE) {
-			this.mPushMessageClient.getClientConfiguration().getClientUser().setServerKey(mPushMessageModel.getBody());
+			byte[] body = mPushMessageModel.getBody();
+			byte[] buf = new byte[body.length];
+			System.arraycopy(body, 0, buf, 0, body.length);
+			this.mPushMessageClient.getClientConfiguration().getClientUser().setServerKey(buf);
 			this.mPushMessageClient
 					.sendMessage(ClientMPushMessageHelper.login(this.mPushMessageClient.getClientConfiguration()));
+			return;
 		} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_LOGIN_RESPONSE_RETRY) {
 			this.mPushMessageClient
 					.sendMessage(ClientMPushMessageHelper.login(this.mPushMessageClient.getClientConfiguration()));
+			return;
 		} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_LOGIN_RESPONSE_OK) {
 			List<MPushClientListener> listeners = this.mPushMessageClient.getClientConfiguration().getListeners();
 			for (MPushClientListener mPushClientListener : listeners) {
 				mPushClientListener
 						.loginSuccessfully(new MPushMessageEvent(this.mPushMessageClient, mPushMessageModel));
 			}
+			return;
 		} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_LOGIN_RESPONSE_NO) {
 			List<MPushClientListener> listeners = this.mPushMessageClient.getClientConfiguration().getListeners();
 			for (MPushClientListener mPushClientListener : listeners) {
 				mPushClientListener
 						.loginUnsuccessfully(new MPushMessageEvent(this.mPushMessageClient, mPushMessageModel));
 			}
+			return;
 		} else {
 
 			List<MPushClientListener> listeners = this.mPushMessageClient.getClientConfiguration().getListeners();
 			for (MPushClientListener mPushClientListener : listeners) {
 				mPushClientListener.receveMessage(new MPushMessageEvent(this.mPushMessageClient, mPushMessageModel));
 			}
-
+			return;
 		}
 
 	}
 
-	private void sendRequestEnctryptment(MPushMessageModel serverMPushMessageModel)
-			throws MPushMessageException, IOException {
-		MPushMessageModel mPushMessageModel = new MPushMessageModel();
-		mPushMessageModel.setMessageType(MPushMessageType.AUTH_ENCRYPT_REQUEST);
-		mPushMessageModel.setRequestSequence(
-				this.mPushMessageClient.getClientConfiguration().getRequestSequence().incrementAndGet());
-		mPushMessageModel.setResponseSequence(serverMPushMessageModel.getRequestSequence());
-		mPushMessageModel.setBody(this.mPushMessageClient.getClientConfiguration().getClientUser().getPublicKey());
-		this.mPushMessageClient.sendMessage(mPushMessageModel);
+	private void sendRequestEnctryptment() throws MPushMessageException, IOException {
+		this.mPushMessageClient
+				.sendMessage(ClientMPushMessageHelper.requestEncrypt(this.mPushMessageClient.getClientConfiguration()));
 	}
 
 }
