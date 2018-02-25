@@ -24,8 +24,13 @@ public class MPushMessageProtocolDecoder implements ProtocolDecoder {
 		in.get(buf);
 		if (limit >= MPushMessageModelConstants.OFFSET_MESSAGE_BODY) {
 			MPushMessageModel mPushMessageModel = MPushMessageUtil.fromByteArray(buf);
-			if (MPushMessageMd5Coder.verifyMPushMessageMd5Value(mPushMessageModel)) {
+			if (limit == MPushMessageModelConstants.OFFSET_MESSAGE_BODY && mPushMessageModel.getBodyLenth() != 0) {
+				String msg = "数据包不完整，丢弃数据：" + new String(buf);
+				logger.info(msg);
+				throw new MPushMessageDecodeException(mPushMessageModel, msg);
+			} else if (MPushMessageMd5Coder.verifyMPushMessageMd5Value(mPushMessageModel)) {
 				out.write(mPushMessageModel);
+				return;
 			} else {
 				String msg = "数据包md5校验不正确，丢弃数据：" + new String(buf);
 				logger.info(msg);
@@ -40,7 +45,6 @@ public class MPushMessageProtocolDecoder implements ProtocolDecoder {
 	@Override
 	public void finishDecode(IoSession session, ProtocolDecoderOutput out) throws Exception {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override

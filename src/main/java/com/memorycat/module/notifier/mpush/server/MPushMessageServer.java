@@ -11,5 +11,6 @@ public interface MPushMessageServer {
 
 	ServerConfiguration getServerConfiguration();
 
-	MPushMessageModel sendMessage(LoginUser LoginUser, Object message) throws MPushMessageException, IOException;
+	MPushMessageModel sendMessage(LoginUser LoginUser, Object message)
+			throws MPushMessageException, IOException, Exception;
 }

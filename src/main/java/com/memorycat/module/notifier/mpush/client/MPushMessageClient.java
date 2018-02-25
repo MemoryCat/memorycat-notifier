@@ -8,7 +8,7 @@ import com.memorycat.module.notifier.mpush.model.MPushMessageModel;
 
 public interface MPushMessageClient {
 
-	MPushMessageModel sendMessage(Object message) throws MPushMessageException, IOException;
+	MPushMessageModel sendMessage(Object message) throws MPushMessageException, IOException, Exception;
 
 	ClientConfiguration getClientConfiguration();
 

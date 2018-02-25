@@ -7,11 +7,14 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.memorycat.module.notifier.mpush.client.config.ClientConfiguration;
 import com.memorycat.module.notifier.mpush.client.event.MPushMessageEvent;
 import com.memorycat.module.notifier.mpush.client.listener.MPushClientListener;
+import com.memorycat.module.notifier.mpush.client.model.ClientUser;
 import com.memorycat.module.notifier.mpush.exception.MPushMessageException;
 import com.memorycat.module.notifier.mpush.model.MPushMessageModel;
 import com.memorycat.module.notifier.mpush.model.MPushMessageType;
+import com.memorycat.module.notifier.util.DhEncryptUtil;
 
 public class MPushMessageClientMessageDisptcher {
 
@@ -25,52 +28,65 @@ public class MPushMessageClientMessageDisptcher {
 	}
 
 	public void disptach(MPushMessageModel mPushMessageModel, IoSession context)
-			throws MPushMessageException, IOException {
+			throws MPushMessageException, IOException, Exception {
 		logger.trace("dispatching message:" + mPushMessageModel);
 
-		if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_ENCRYPT_RESPONSE_RETRY) {
-			this.sendRequestEnctryptment();
+		//TODO listener未实现通知
+		
+		ClientConfiguration clientConfiguration = this.mPushMessageClient.getClientConfiguration();
+		ClientUser clientUser = clientConfiguration.getClientUser();
+		if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_ENCRYPT_RESPONSE) {
+			clientUser.setServerKey(mPushMessageModel.getBody());
+			this.mPushMessageClient.sendMessage(ClientMPushMessageHelper.login(clientConfiguration));
 			return;
-		} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_ENCRYPT_RESPONSE) {
-			byte[] body = mPushMessageModel.getBody();
-			byte[] buf = new byte[body.length];
-			System.arraycopy(body, 0, buf, 0, body.length);
-			this.mPushMessageClient.getClientConfiguration().getClientUser().setServerKey(buf);
-			this.mPushMessageClient
-					.sendMessage(ClientMPushMessageHelper.login(this.mPushMessageClient.getClientConfiguration()));
-			return;
-		} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_LOGIN_RESPONSE_RETRY) {
-			this.mPushMessageClient
-					.sendMessage(ClientMPushMessageHelper.login(this.mPushMessageClient.getClientConfiguration()));
-			return;
-		} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_LOGIN_RESPONSE_OK) {
-			List<MPushClientListener> listeners = this.mPushMessageClient.getClientConfiguration().getListeners();
-			for (MPushClientListener mPushClientListener : listeners) {
-				mPushClientListener
-						.loginSuccessfully(new MPushMessageEvent(this.mPushMessageClient, mPushMessageModel));
-			}
-			return;
-		} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_LOGIN_RESPONSE_NO) {
-			List<MPushClientListener> listeners = this.mPushMessageClient.getClientConfiguration().getListeners();
-			for (MPushClientListener mPushClientListener : listeners) {
-				mPushClientListener
-						.loginUnsuccessfully(new MPushMessageEvent(this.mPushMessageClient, mPushMessageModel));
-			}
+		} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_ENCRYPT_RESPONSE_RETRY) {
+			this.mPushMessageClient.sendMessage(ClientMPushMessageHelper.requestEncrypt(clientConfiguration));
 			return;
 		} else {
 
-			List<MPushClientListener> listeners = this.mPushMessageClient.getClientConfiguration().getListeners();
-			for (MPushClientListener mPushClientListener : listeners) {
-				mPushClientListener.receveMessage(new MPushMessageEvent(this.mPushMessageClient, mPushMessageModel));
+			// 先要解密原消息
+
+			if (clientUser.getServerKey() == null || clientUser.getServerKey().length == 0) {
+				logger.debug("丢弃消息，未与服务器进行密钥交换。" + mPushMessageModel);
+				this.mPushMessageClient.sendMessage(ClientMPushMessageHelper.requestEncrypt(clientConfiguration));
+				return;
 			}
-			return;
+
+			byte[] body = mPushMessageModel.getBody();
+			byte[] decode = DhEncryptUtil.decode(clientUser.getServerKey(), clientUser.getPrivateKey(), body);
+			mPushMessageModel.setBody(decode);
+			mPushMessageModel.setBodyLenth((short) decode.length);
+			// 消息已解密完成。。。
+
+			if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_LOGIN_RESPONSE_RETRY) {
+				this.mPushMessageClient.sendMessage(ClientMPushMessageHelper.login(clientConfiguration));
+				return;
+			} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_LOGIN_RESPONSE_OK) {
+				List<MPushClientListener> listeners = clientConfiguration.getListeners();
+				for (MPushClientListener mPushClientListener : listeners) {
+					mPushClientListener
+							.loginSuccessfully(new MPushMessageEvent(this.mPushMessageClient, mPushMessageModel));
+				}
+				return;
+			} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_LOGIN_RESPONSE_NO) {
+				List<MPushClientListener> listeners = clientConfiguration.getListeners();
+				for (MPushClientListener mPushClientListener : listeners) {
+					mPushClientListener
+							.loginUnsuccessfully(new MPushMessageEvent(this.mPushMessageClient, mPushMessageModel));
+				}
+				return;
+			} else {
+
+				List<MPushClientListener> listeners = clientConfiguration.getListeners();
+				for (MPushClientListener mPushClientListener : listeners) {
+					mPushClientListener
+							.receveMessage(new MPushMessageEvent(this.mPushMessageClient, mPushMessageModel));
+				}
+				return;
+			}
+
 		}
 
-	}
-
-	private void sendRequestEnctryptment() throws MPushMessageException, IOException {
-		this.mPushMessageClient
-				.sendMessage(ClientMPushMessageHelper.requestEncrypt(this.mPushMessageClient.getClientConfiguration()));
 	}
 
 }

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.memorycat.module.notifier.mpush.exception.UnknownRecevicedMessageException;
 import com.memorycat.module.notifier.mpush.model.MPushMessageModel;
 
-  class ServerMessageHandler implements IoHandler {
+public class ServerMessageHandler implements IoHandler {
 
 	private static final Logger logger = LoggerFactory.getLogger(ServerMessageHandler.class);
 	private final MPushMessageServer mPushMessageServer;
