@@ -1,6 +1,6 @@
 package com.memorycat.module.notifier.exception;
 
-public class NotifierException extends RuntimeException {
+public class NotifierException extends Exception {
 
 	private static final long serialVersionUID = -9222470446981641758L;
 

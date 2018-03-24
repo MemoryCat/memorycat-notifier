@@ -1,5 +1,5 @@
 package com.memorycat.module.notifier.mpush.server.listener;
 
-public interface MPushServerListener {
+public interface MPushServerListener extends LoginUserServerListener {
 
 }

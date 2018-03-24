@@ -28,6 +28,7 @@ import com.memorycat.module.notifier.mpush.server.config.LoginUserManager;
 import com.memorycat.module.notifier.mpush.server.config.ServerConfiguration;
 import com.memorycat.module.notifier.mpush.server.model.ConnectionAddress;
 import com.memorycat.module.notifier.mpush.server.model.LoginUser;
+import com.memorycat.module.notifier.mpush.util.Constants;
 import com.memorycat.module.notifier.mpush.util.MPushMessageMd5Coder;
 import com.memorycat.module.notifier.util.DhEncryptUtil;
 
@@ -38,7 +39,11 @@ public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 
 	public MPushMessageServerImpl(ServerConfiguration serverConfiguration) {
 		super();
+		if(serverConfiguration==null) {
+			throw new NullPointerException(Constants.EXCEPTION_SERVER_INIT_NULLPOINT_CONFIG);
+		}
 		this.serverConfiguration = serverConfiguration;
+		this.serverConfiguration.setmPushMessageServer(this);
 	}
 
 	public void run() {
@@ -148,13 +153,16 @@ public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 
 	public static void main(String[] args) throws InterruptedException {
 		ServerConfiguration serverConfiguration = new ServerConfiguration(12345);
+		serverConfiguration.setHeartBeatSeconds(5);
+		serverConfiguration.setHeartBeatFailedCount(3);
+//		serverConfiguration.setSendDbMessagePeriod(5000L);
 		serverConfiguration.setLoginUserManager(new LoginUserManager());
 		serverConfiguration.setLoginUserAuthenticator(new LoginUserAuthenticator());
 		AuthenticatorServerManger authenticatorServerManger = new AuthenticatorServerManger();
 		serverConfiguration.setAuthenticatorServerManger(authenticatorServerManger);
 		authenticatorServerManger.register(new UserAndPasswordAuthenticator());
+
 		MPushMessageServerImpl server = new MPushMessageServerImpl(serverConfiguration);
-		serverConfiguration.setmPushMessageServer(server);
 		Thread thread = new Thread(server);
 		thread.start();
 		logger.info("server is running");

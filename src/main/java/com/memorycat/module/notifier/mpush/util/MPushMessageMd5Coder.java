@@ -69,7 +69,7 @@ public class MPushMessageMd5Coder {
 		return true;
 	}
 
-	public static void main(String[] args) throws MPushMessageMd5EncodeException, NoSuchAlgorithmException, CloneNotSupportedException {
+	public static void main(String[] args) throws MPushMessageMd5EncodeException, NoSuchAlgorithmException, CloneNotSupportedException, MPushMessageMd5VerifyException {
 		MPushMessageModel mPushMessageModel = new MPushMessageModel();
 		mPushMessageModel.setMessageType(MPushMessageType.UNKOWN);
 		mPushMessageModel.setBody("asdasd".getBytes());

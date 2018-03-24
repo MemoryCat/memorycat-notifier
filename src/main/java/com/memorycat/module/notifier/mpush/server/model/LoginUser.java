@@ -53,9 +53,18 @@ public class LoginUser implements Serializable {
 	private Object authentication;
 
 	/**
+	 * 用户。该字段可指向{@link com.memorycat.module.notifier.db.model.NotificationMessage#user}
+	 */
+	private String userId;
+	/**
 	 * 登录时间
 	 */
 	private Date loginTime = new Date();
+
+	/**
+	 * 最后一次心跳包时间
+	 */
+	private Date lastHeartBeat = new Date(0L);
 	/**
 	 * 登录设备
 	 */
@@ -124,6 +133,22 @@ public class LoginUser implements Serializable {
 		this.clientKey = clientKey;
 	}
 
+	public Date getLastHeartBeat() {
+		return lastHeartBeat;
+	}
+
+	public void setLastHeartBeat(Date lastHeartBeat) {
+		this.lastHeartBeat = lastHeartBeat;
+	}
+
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -132,10 +157,12 @@ public class LoginUser implements Serializable {
 		result = prime * result + Arrays.hashCode(clientKey);
 		result = prime * result + ((connectionAddress == null) ? 0 : connectionAddress.hashCode());
 		result = prime * result + ((extendProperties == null) ? 0 : extendProperties.hashCode());
+		result = prime * result + ((lastHeartBeat == null) ? 0 : lastHeartBeat.hashCode());
 		result = prime * result + ((loginDevice == null) ? 0 : loginDevice.hashCode());
 		result = prime * result + ((loginTime == null) ? 0 : loginTime.hashCode());
 		result = prime * result + ((privateKey == null) ? 0 : privateKey.hashCode());
 		result = prime * result + ((publicKey == null) ? 0 : publicKey.hashCode());
+		result = prime * result + ((userId == null) ? 0 : userId.hashCode());
 		return result;
 	}
 
@@ -165,6 +192,11 @@ public class LoginUser implements Serializable {
 				return false;
 		} else if (!extendProperties.equals(other.extendProperties))
 			return false;
+		if (lastHeartBeat == null) {
+			if (other.lastHeartBeat != null)
+				return false;
+		} else if (!lastHeartBeat.equals(other.lastHeartBeat))
+			return false;
 		if (loginDevice == null) {
 			if (other.loginDevice != null)
 				return false;
@@ -185,15 +217,19 @@ public class LoginUser implements Serializable {
 				return false;
 		} else if (!publicKey.equals(other.publicKey))
 			return false;
+		if (userId == null) {
+			if (other.userId != null)
+				return false;
+		} else if (!userId.equals(other.userId))
+			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "LoginUser [publicKey=" + publicKey + ", privateKey=" + privateKey + ", clientKey="
-				+ Arrays.toString(clientKey) + ", connectionAddress=" + connectionAddress + ", authentication="
-				+ authentication + ", loginTime=" + loginTime + ", loginDevice=" + loginDevice + ", extendProperties="
-				+ extendProperties + "]";
+		return "LoginUser [ connectionAddress=" + connectionAddress + ", authentication=" + authentication + ", userId="
+				+ userId + ", loginTime=" + loginTime + ", lastHeartBeat=" + lastHeartBeat + ", loginDevice="
+				+ loginDevice + ", extendProperties=" + extendProperties + "]";
 	}
 
 }

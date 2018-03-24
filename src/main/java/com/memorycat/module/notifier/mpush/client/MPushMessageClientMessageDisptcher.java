@@ -7,6 +7,8 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.memorycat.module.notifier.db.model.NotificationMessage;
+import com.memorycat.module.notifier.db.util.JsonUtil;
 import com.memorycat.module.notifier.mpush.client.config.ClientConfiguration;
 import com.memorycat.module.notifier.mpush.client.event.MPushMessageEvent;
 import com.memorycat.module.notifier.mpush.client.listener.MPushClientListener;
@@ -31,8 +33,8 @@ public class MPushMessageClientMessageDisptcher {
 			throws MPushMessageException, IOException, Exception {
 		logger.trace("dispatching message:" + mPushMessageModel);
 
-		//TODO listener未实现通知
-		
+		// TODO listener未实现通知
+
 		ClientConfiguration clientConfiguration = this.mPushMessageClient.getClientConfiguration();
 		ClientUser clientUser = clientConfiguration.getClientUser();
 		if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_ENCRYPT_RESPONSE) {
@@ -75,8 +77,25 @@ public class MPushMessageClientMessageDisptcher {
 							.loginUnsuccessfully(new MPushMessageEvent(this.mPushMessageClient, mPushMessageModel));
 				}
 				return;
+			} else if (mPushMessageModel.getMessageType() == MPushMessageType.STATE_HEARTBEAT_REQUEST) {
+				// TODO
+				logger.trace("client try heart beat ...");
+				this.mPushMessageClient.sendMessage(
+						ClientMPushMessageHelper.heartBeat(this.mPushMessageClient.getClientConfiguration()));
+				return;
+			} else if (mPushMessageModel.getMessageType() == MPushMessageType.MESSAGE_DATABASE_SERVER_SEND) {
+				NotificationMessage notificationMessage = JsonUtil.fromJsonByteArray(mPushMessageModel.getBody());
+				logger.debug("recv db msg :" + notificationMessage);
+				this.mPushMessageClient.sendMessage(ClientMPushMessageHelper.recvDatabaseNotificationMessage(
+						this.mPushMessageClient.getClientConfiguration(), mPushMessageModel));
+				
+				
+				this.mPushMessageClient.sendMessage(ClientMPushMessageHelper.readDatabaseNotificationMessage(
+						this.mPushMessageClient.getClientConfiguration(), mPushMessageModel));
+				
 			} else {
 
+				logger.trace("未知消息：" + new String(mPushMessageModel.getBody()));
 				List<MPushClientListener> listeners = clientConfiguration.getListeners();
 				for (MPushClientListener mPushClientListener : listeners) {
 					mPushClientListener

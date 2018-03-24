@@ -6,7 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.memorycat.module.notifier.mpush.auth.AuthenticatedResult;
 import com.memorycat.module.notifier.mpush.exception.auth.AuthenticationException;
 import com.memorycat.module.notifier.mpush.exception.auth.PasswordErrorException;
 import com.memorycat.module.notifier.mpush.exception.auth.UserNotFoundException;
@@ -42,20 +41,20 @@ public class AuthenticatorServerManger {
 		serverAuthenticators.add(index, element);
 	}
 
-	public AuthenticatedResult login(Object info) {
-		AuthenticatedResult loginResult = null;
+	public ServerAuthenticatedResult login(Object info) {
+		ServerAuthenticatedResult loginResult = null;
 		for (UserAuthenticator userAuthenticator : serverAuthenticators) {
 			try {
 				loginResult = userAuthenticator.login(info);
 				break;
 			} catch (UserNotFoundException e) {
-				logger.debug(e.getLocalizedMessage(), e);
+				logger.info(e.getLocalizedMessage(), e);
 			} catch (PasswordErrorException e) {
-				logger.debug(e.getLocalizedMessage(), e);
+				logger.info(e.getLocalizedMessage(), e);
 			} catch (AuthenticationException e) {
-				logger.debug(e.getLocalizedMessage(), e);
+				logger.info(e.getLocalizedMessage(), e);
 			} catch (Exception e) {
-				logger.warn(e.getLocalizedMessage(), e);
+				logger.info(e.getLocalizedMessage(), e);
 			}
 		}
 		return loginResult;

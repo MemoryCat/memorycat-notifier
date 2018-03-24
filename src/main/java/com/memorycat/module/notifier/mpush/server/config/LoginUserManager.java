@@ -35,6 +35,10 @@ public class LoginUserManager {
 		return loginUsers.contains(o);
 	}
 
+	public Set<LoginUser> getLoginUsers() {
+		return loginUsers;
+	}
+
 	/**
 	 * 在内部维护的集合中查找LoginUser
 	 * 
@@ -45,6 +49,17 @@ public class LoginUserManager {
 		for (LoginUser loginUser : loginUsers) {
 			if (loginUser.getConnectionAddress().equals(connectionAddress)) {
 				return loginUser;
+			}
+		}
+		return null;
+	}
+
+	public LoginUser findByUserId(String userId) {
+		if (userId != null) {
+			for (LoginUser loginUser : loginUsers) {
+				if (userId.equals(loginUser.getUserId())) {
+					return loginUser;
+				}
 			}
 		}
 		return null;
@@ -70,6 +85,7 @@ public class LoginUserManager {
 
 	/**
 	 * {@link #getLoginUser(ConnectionAddress)}
+	 * 
 	 * @param ioSession
 	 * @return
 	 */
