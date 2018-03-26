@@ -3,10 +3,12 @@ package com.memorycat.module.notifier.mpush.client;
 import com.memorycat.module.notifier.db.exception.NotificationMessageSerializeException;
 import com.memorycat.module.notifier.db.model.NotificationMessage;
 import com.memorycat.module.notifier.db.util.JsonUtil;
+import com.memorycat.module.notifier.exception.EncryptDecodeException;
 import com.memorycat.module.notifier.mpush.client.config.ClientConfiguration;
 import com.memorycat.module.notifier.mpush.exception.auth.AuthenticationException;
 import com.memorycat.module.notifier.mpush.model.MPushMessageModel;
 import com.memorycat.module.notifier.mpush.model.MPushMessageType;
+import com.memorycat.module.notifier.util.EncryptUtil;
 
 public class ClientMPushMessageHelper {
 
@@ -18,11 +20,11 @@ public class ClientMPushMessageHelper {
 		return mPushMessageModel;
 	}
 
-	public static MPushMessageModel requestEncrypt(ClientConfiguration clientConfiguration) {
+	public static MPushMessageModel requestEncrypt(ClientConfiguration clientConfiguration) throws EncryptDecodeException {
 		MPushMessageModel mPushMessageModel = new MPushMessageModel();
 		mPushMessageModel.setMessageType(MPushMessageType.AUTH_ENCRYPT_REQUEST);
 		mPushMessageModel.setRequestSequence(clientConfiguration.getRequestSequence().getAndIncrement());
-		mPushMessageModel.setBody(clientConfiguration.getClientUser().getPublicKey().getEncoded());
+		mPushMessageModel.setBody(EncryptUtil.publicKeyToByteArray(clientConfiguration.getClientUser().getPublicKey()));
 		return mPushMessageModel;
 	}
 

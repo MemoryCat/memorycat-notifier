@@ -9,10 +9,12 @@ import java.net.SocketAddress;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
+import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,33 +32,39 @@ import com.memorycat.module.notifier.mpush.server.model.ConnectionAddress;
 import com.memorycat.module.notifier.mpush.server.model.LoginUser;
 import com.memorycat.module.notifier.mpush.util.Constants;
 import com.memorycat.module.notifier.mpush.util.MPushMessageMd5Coder;
-import com.memorycat.module.notifier.util.DhEncryptUtil;
+import com.memorycat.module.notifier.util.EncryptUtil;
 
 public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 	private static final Logger logger = LoggerFactory.getLogger(MPushMessageServerImpl.class);
-	private NioDatagramAcceptor nioDatagramAcceptor = new NioDatagramAcceptor();
+	// private IoAcceptor ioAcceptor = new
+	// NioSocketAcceptor();//NioDatagramAcceptor();
+	private final IoAcceptor ioAcceptor;
 	private final ServerConfiguration serverConfiguration;
 
 	public MPushMessageServerImpl(ServerConfiguration serverConfiguration) {
 		super();
-		if(serverConfiguration==null) {
+		if (serverConfiguration == null) {
 			throw new NullPointerException(Constants.EXCEPTION_SERVER_INIT_NULLPOINT_CONFIG);
 		}
 		this.serverConfiguration = serverConfiguration;
 		this.serverConfiguration.setmPushMessageServer(this);
+		if(serverConfiguration.isUseUdp()) {
+			this.ioAcceptor = new NioDatagramAcceptor();
+		}else {
+			this.ioAcceptor = new NioSocketAcceptor();
+		}
 	}
 
 	public void run() {
 		try {
-			nioDatagramAcceptor.getSessionConfig().setReuseAddress(true);
-			nioDatagramAcceptor.getFilterChain().addLast("logger", new LoggingFilter());
+			// ioAcceptor.getSessionConfig().setReuseAddress(true);
+			ioAcceptor.getFilterChain().addLast("logger", new LoggingFilter());
 
-			nioDatagramAcceptor.getFilterChain().addLast("codec",
-					new ProtocolCodecFilter(new MPushMessageProtocolFactory()));
+			ioAcceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new MPushMessageProtocolFactory()));
 
-			nioDatagramAcceptor.setHandler(new ServerMessageHandler(this));
-			nioDatagramAcceptor.setDefaultLocalAddress(new InetSocketAddress(this.serverConfiguration.getPort()));
-			nioDatagramAcceptor.bind();
+			ioAcceptor.setHandler(new ServerMessageHandler(this));
+			ioAcceptor.setDefaultLocalAddress(new InetSocketAddress(this.serverConfiguration.getPort()));
+			ioAcceptor.bind();
 
 		} catch (Exception e) {
 			logger.warn(e.getLocalizedMessage(), e);
@@ -86,7 +94,7 @@ public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 			}
 		}
 
-		if ((loginUser.getClientKey() == null || loginUser.getClientKey().length == 0)
+		if ((loginUser.getClientKey() == null)
 				&& !(MPushMessageType.AUTH_ENCRYPT_RESPONSE == mPushMessageModel.getMessageType()
 						|| MPushMessageType.AUTH_ENCRYPT_RESPONSE_RETRY == mPushMessageModel.getMessageType())) {
 			// ?丢弃消息？ 或是发送加密重试请求
@@ -97,7 +105,7 @@ public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 					&& MPushMessageType.AUTH_ENCRYPT_RESPONSE_RETRY != mPushMessageModel.getMessageType()) {
 				synchronized (mPushMessageModel) {
 					// 加密body
-					byte[] encode = DhEncryptUtil.encode(loginUser.getClientKey(), loginUser.getPrivateKey(),
+					byte[] encode = EncryptUtil.encode(loginUser.getClientKey(), loginUser.getPrivateKey(),
 							mPushMessageModel.getBody());
 					mPushMessageModel.setBody(encode);
 				}
@@ -121,7 +129,7 @@ public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 		// 先查mina自己管理session有木有，没有的话再自己创建。
 		// 因为mina闲时超过1分钟钟就自动断开，所以memorycat-notifier使用自己的链接管理机制
 		IoSession ioSession = null;
-		Map<Long, IoSession> managedSessions = this.nioDatagramAcceptor.getManagedSessions();
+		Map<Long, IoSession> managedSessions = this.ioAcceptor.getManagedSessions();
 		for (Entry<Long, IoSession> e : managedSessions.entrySet()) {
 			IoSession value = e.getValue();
 			SocketAddress remoteAddress = value.getRemoteAddress();
@@ -136,11 +144,8 @@ public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 			}
 		}
 		if (ioSession == null) {
-			ioSession = this.nioDatagramAcceptor
-					.newSession(
-							new InetSocketAddress(loginUser.getConnectionAddress().getIp(),
-									loginUser.getConnectionAddress().getPort()),
-							this.nioDatagramAcceptor.getLocalAddress());
+			ioSession = this.ioAcceptor.newSession(new InetSocketAddress(loginUser.getConnectionAddress().getIp(),
+					loginUser.getConnectionAddress().getPort()), this.ioAcceptor.getLocalAddress());
 			logger.trace("Mina管理下的链接已经断开，尝试重新使用新的链接进行原地址通讯。" + ioSession);
 		}
 		return ioSession;
@@ -152,10 +157,10 @@ public class MPushMessageServerImpl implements Runnable, MPushMessageServer {
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-		ServerConfiguration serverConfiguration = new ServerConfiguration(12345);
+		ServerConfiguration serverConfiguration = new ServerConfiguration(12345,false);
 		serverConfiguration.setHeartBeatSeconds(5);
 		serverConfiguration.setHeartBeatFailedCount(3);
-//		serverConfiguration.setSendDbMessagePeriod(5000L);
+		// serverConfiguration.setSendDbMessagePeriod(5000L);
 		serverConfiguration.setLoginUserManager(new LoginUserManager());
 		serverConfiguration.setLoginUserAuthenticator(new LoginUserAuthenticator());
 		AuthenticatorServerManger authenticatorServerManger = new AuthenticatorServerManger();

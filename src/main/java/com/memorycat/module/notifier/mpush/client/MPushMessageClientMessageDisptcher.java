@@ -16,7 +16,7 @@ import com.memorycat.module.notifier.mpush.client.model.ClientUser;
 import com.memorycat.module.notifier.mpush.exception.MPushMessageException;
 import com.memorycat.module.notifier.mpush.model.MPushMessageModel;
 import com.memorycat.module.notifier.mpush.model.MPushMessageType;
-import com.memorycat.module.notifier.util.DhEncryptUtil;
+import com.memorycat.module.notifier.util.EncryptUtil;
 
 public class MPushMessageClientMessageDisptcher {
 
@@ -38,7 +38,7 @@ public class MPushMessageClientMessageDisptcher {
 		ClientConfiguration clientConfiguration = this.mPushMessageClient.getClientConfiguration();
 		ClientUser clientUser = clientConfiguration.getClientUser();
 		if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_ENCRYPT_RESPONSE) {
-			clientUser.setServerKey(mPushMessageModel.getBody());
+			clientUser.setServerKey(EncryptUtil.getPublicKeyFromByteArray(mPushMessageModel.getBody()));
 			this.mPushMessageClient.sendMessage(ClientMPushMessageHelper.login(clientConfiguration));
 			return;
 		} else if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_ENCRYPT_RESPONSE_RETRY) {
@@ -48,14 +48,14 @@ public class MPushMessageClientMessageDisptcher {
 
 			// 先要解密原消息
 
-			if (clientUser.getServerKey() == null || clientUser.getServerKey().length == 0) {
+			if (clientUser.getServerKey() == null) {
 				logger.debug("丢弃消息，未与服务器进行密钥交换。" + mPushMessageModel);
 				this.mPushMessageClient.sendMessage(ClientMPushMessageHelper.requestEncrypt(clientConfiguration));
 				return;
 			}
 
 			byte[] body = mPushMessageModel.getBody();
-			byte[] decode = DhEncryptUtil.decode(clientUser.getServerKey(), clientUser.getPrivateKey(), body);
+			byte[] decode = EncryptUtil.decode(clientUser.getServerKey(), clientUser.getPrivateKey(), body);
 			mPushMessageModel.setBody(decode);
 			mPushMessageModel.setBodyLenth((short) decode.length);
 			// 消息已解密完成。。。

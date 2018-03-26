@@ -15,7 +15,12 @@
 	</properties>
 
 	<dependencies>
-
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.1</version>
+			<scope>test</scope>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.mina/mina-core -->
 		<dependency>
 			<groupId>org.apache.mina</groupId>
@@ -73,24 +78,51 @@
 			<artifactId>jackson-databind</artifactId>
 			<version>2.9.4</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15 -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk15on</artifactId>
+			<version>1.59</version>
+		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>com.madgag.spongycastle</groupId> -->
+		<!-- <artifactId>core</artifactId> -->
+		<!-- <version>1.53.0.0</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>com.madgag.spongycastle</groupId> -->
+		<!-- <artifactId>prov</artifactId> -->
+		<!-- <version>1.53.0.0</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>com.madgag.spongycastle</groupId> -->
+		<!-- <artifactId>pkix</artifactId> -->
+		<!-- <version>1.53.0.0</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>com.madgag.spongycastle</groupId> -->
+		<!-- <artifactId>pg</artifactId> -->
+		<!-- <version>1.53.0.0</version> -->
+		<!-- </dependency> -->
+
 
 	</dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version>
-				<configuration>
-					<archive>
-						<manifest>
-							<addClasspath>true</addClasspath>
-							<mainClass>com.memorycat.module.notifier.client.TestUdp1</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+	<!-- <build> -->
+	<!-- <plugins> -->
+	<!-- <plugin> -->
+	<!-- <groupId>org.apache.maven.plugins</groupId> -->
+	<!-- <artifactId>maven-jar-plugin</artifactId> -->
+	<!-- <version>2.4</version> -->
+	<!-- <configuration> -->
+	<!-- <archive> -->
+	<!-- <manifest> -->
+	<!-- <addClasspath>true</addClasspath> -->
+	<!-- <mainClass>com.memorycat.module.notifier.client.TestUdp1</mainClass> -->
+	<!-- </manifest> -->
+	<!-- </archive> -->
+	<!-- </configuration> -->
+	<!-- </plugin> -->
+	<!-- </plugins> -->
+	<!-- </build> -->
 </project>

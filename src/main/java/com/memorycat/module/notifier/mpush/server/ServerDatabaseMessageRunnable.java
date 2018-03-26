@@ -41,7 +41,7 @@ public class ServerDatabaseMessageRunnable extends TimerTask implements Runnable
 					LoginUser loginUser = loginUserManager.findByUserId(notificationMessage.getUserId());
 					if (loginUser != null) {
 						MPushMessageServer mPushMessageServer = this.serverConfiguration.getmPushMessageServer();
-						logger.debug("trying to send dbMessage to loginUser(" + loginUser.getUserId() + ")");
+						logger.debug("trying to send dbMessage to loginUser(" + loginUser.getUserId() + "):"+notificationMessage);
 						mPushMessageServer.sendMessage(loginUser, ServerMPushMessageHelper
 								.dbNotificationMessage(this.serverConfiguration, notificationMessage));
 					}

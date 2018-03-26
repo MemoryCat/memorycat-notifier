@@ -4,12 +4,11 @@ import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.memorycat.module.notifier.util.KeyUtil;
+import com.memorycat.module.notifier.util.EncryptUtil;
 
 /**
  * 登录的用户包含：
@@ -41,7 +40,7 @@ public class LoginUser implements Serializable {
 	/**
 	 * 客户端的密钥
 	 */
-	private byte[] clientKey;
+	private PublicKey clientKey;
 
 	/**
 	 * 链接地址信息
@@ -75,18 +74,18 @@ public class LoginUser implements Serializable {
 	private final Map<String, Object> extendProperties = new ConcurrentHashMap<>();
 
 	public LoginUser() {
-		KeyPair keyPair = KeyUtil.getKeyPair();
+		KeyPair keyPair = EncryptUtil.getKeyPair();
 		this.publicKey = keyPair.getPublic();
 		this.privateKey = keyPair.getPrivate();
 
 	}
 
-	public PublicKey getPublicKey() {
-		return publicKey;
+	public PublicKey getClientKey() {
+		return clientKey;
 	}
 
-	public PrivateKey getPrivateKey() {
-		return privateKey;
+	public void setClientKey(PublicKey clientKey) {
+		this.clientKey = clientKey;
 	}
 
 	public ConnectionAddress getConnectionAddress() {
@@ -105,32 +104,20 @@ public class LoginUser implements Serializable {
 		this.authentication = authentication;
 	}
 
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
 	public Date getLoginTime() {
 		return loginTime;
 	}
 
 	public void setLoginTime(Date loginTime) {
 		this.loginTime = loginTime;
-	}
-
-	public String getLoginDevice() {
-		return loginDevice;
-	}
-
-	public void setLoginDevice(String loginDevice) {
-		this.loginDevice = loginDevice;
-	}
-
-	public Map<String, Object> getExtendProperties() {
-		return extendProperties;
-	}
-
-	public byte[] getClientKey() {
-		return clientKey;
-	}
-
-	public void setClientKey(byte[] clientKey) {
-		this.clientKey = clientKey;
 	}
 
 	public Date getLastHeartBeat() {
@@ -141,12 +128,24 @@ public class LoginUser implements Serializable {
 		this.lastHeartBeat = lastHeartBeat;
 	}
 
-	public String getUserId() {
-		return userId;
+	public String getLoginDevice() {
+		return loginDevice;
 	}
 
-	public void setUserId(String userId) {
-		this.userId = userId;
+	public void setLoginDevice(String loginDevice) {
+		this.loginDevice = loginDevice;
+	}
+
+	public PublicKey getPublicKey() {
+		return publicKey;
+	}
+
+	public PrivateKey getPrivateKey() {
+		return privateKey;
+	}
+
+	public Map<String, Object> getExtendProperties() {
+		return extendProperties;
 	}
 
 	@Override
@@ -154,7 +153,7 @@ public class LoginUser implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((authentication == null) ? 0 : authentication.hashCode());
-		result = prime * result + Arrays.hashCode(clientKey);
+		result = prime * result + ((clientKey == null) ? 0 : clientKey.hashCode());
 		result = prime * result + ((connectionAddress == null) ? 0 : connectionAddress.hashCode());
 		result = prime * result + ((extendProperties == null) ? 0 : extendProperties.hashCode());
 		result = prime * result + ((lastHeartBeat == null) ? 0 : lastHeartBeat.hashCode());
@@ -180,7 +179,10 @@ public class LoginUser implements Serializable {
 				return false;
 		} else if (!authentication.equals(other.authentication))
 			return false;
-		if (!Arrays.equals(clientKey, other.clientKey))
+		if (clientKey == null) {
+			if (other.clientKey != null)
+				return false;
+		} else if (!clientKey.equals(other.clientKey))
 			return false;
 		if (connectionAddress == null) {
 			if (other.connectionAddress != null)
@@ -227,7 +229,8 @@ public class LoginUser implements Serializable {
 
 	@Override
 	public String toString() {
-		return "LoginUser [ connectionAddress=" + connectionAddress + ", authentication=" + authentication + ", userId="
+		return "LoginUser [publicKey=" + publicKey + ", privateKey=" + privateKey + ", clientKey=" + clientKey
+				+ ", connectionAddress=" + connectionAddress + ", authentication=" + authentication + ", userId="
 				+ userId + ", loginTime=" + loginTime + ", lastHeartBeat=" + lastHeartBeat + ", loginDevice="
 				+ loginDevice + ", extendProperties=" + extendProperties + "]";
 	}

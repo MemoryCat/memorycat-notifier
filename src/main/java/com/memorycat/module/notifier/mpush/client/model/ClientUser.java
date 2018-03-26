@@ -4,13 +4,12 @@ import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.memorycat.module.notifier.mpush.auth.Authenticator;
-import com.memorycat.module.notifier.util.KeyUtil;
+import com.memorycat.module.notifier.util.EncryptUtil;
 
 public class ClientUser implements Serializable {
 
@@ -18,31 +17,23 @@ public class ClientUser implements Serializable {
 
 	private final PublicKey publicKey;
 	private final PrivateKey privateKey;
-	private byte[] serverKey;
+	private PublicKey serverKey;
 	private Authenticator authenticator;
 	// private Object serverAuthentication;
 	private Date loginDate = new Date();
 	private final Map<String, Object> extendProperties = new ConcurrentHashMap<>();
 
 	public ClientUser() {
-		KeyPair keyPair = KeyUtil.getKeyPair();
+		KeyPair keyPair = EncryptUtil.getKeyPair();
 		this.publicKey = keyPair.getPublic();
 		this.privateKey = keyPair.getPrivate();
 	}
 
-	public PublicKey getPublicKey() {
-		return publicKey;
-	}
-
-	public PrivateKey getPrivateKey() {
-		return privateKey;
-	}
-
-	public byte[] getServerKey() {
+	public PublicKey getServerKey() {
 		return serverKey;
 	}
 
-	public void setServerKey(byte[] serverKey) {
+	public void setServerKey(PublicKey serverKey) {
 		this.serverKey = serverKey;
 	}
 
@@ -62,6 +53,14 @@ public class ClientUser implements Serializable {
 		this.loginDate = loginDate;
 	}
 
+	public PublicKey getPublicKey() {
+		return publicKey;
+	}
+
+	public PrivateKey getPrivateKey() {
+		return privateKey;
+	}
+
 	public Map<String, Object> getExtendProperties() {
 		return extendProperties;
 	}
@@ -75,7 +74,7 @@ public class ClientUser implements Serializable {
 		result = prime * result + ((loginDate == null) ? 0 : loginDate.hashCode());
 		result = prime * result + ((privateKey == null) ? 0 : privateKey.hashCode());
 		result = prime * result + ((publicKey == null) ? 0 : publicKey.hashCode());
-		result = prime * result + Arrays.hashCode(serverKey);
+		result = prime * result + ((serverKey == null) ? 0 : serverKey.hashCode());
 		return result;
 	}
 
@@ -113,16 +112,19 @@ public class ClientUser implements Serializable {
 				return false;
 		} else if (!publicKey.equals(other.publicKey))
 			return false;
-		if (!Arrays.equals(serverKey, other.serverKey))
+		if (serverKey == null) {
+			if (other.serverKey != null)
+				return false;
+		} else if (!serverKey.equals(other.serverKey))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "ClientUser [publicKey=" + publicKey + ", privateKey=" + privateKey + ", serverKey="
-				+ Arrays.toString(serverKey) + ", authenticator=" + authenticator + ", loginDate=" + loginDate
-				+ ", extendProperties=" + extendProperties + "]";
+		return "ClientUser [publicKey=" + publicKey + ", privateKey=" + privateKey + ", serverKey=" + serverKey
+				+ ", authenticator=" + authenticator + ", loginDate=" + loginDate + ", extendProperties="
+				+ extendProperties + "]";
 	}
 
 }

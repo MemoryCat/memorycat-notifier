@@ -40,9 +40,11 @@ public class ServerConfiguration {
 	private final AtomicLong responseSequence = new AtomicLong(1L);
 	private final List<MPushServerListener> listeners = new CopyOnWriteArrayList<MPushServerListener>();
 	private final int port;
+	private final boolean useUdp;
 
-	public ServerConfiguration(int port) {
+	public ServerConfiguration(int port, boolean useUdp) {
 		this.port = port;
+		this.useUdp = useUdp;
 	}
 
 	public int getPort() {
@@ -131,6 +133,10 @@ public class ServerConfiguration {
 		this.notificationMessageService = notificationMessageService;
 	}
 
+	public boolean isUseUdp() {
+		return useUdp;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -147,6 +153,7 @@ public class ServerConfiguration {
 		result = prime * result + ((requestSequence == null) ? 0 : requestSequence.hashCode());
 		result = prime * result + ((responseSequence == null) ? 0 : responseSequence.hashCode());
 		result = prime * result + (int) (sendDbMessagePeriod ^ (sendDbMessagePeriod >>> 32));
+		result = prime * result + (useUdp ? 1231 : 1237);
 		return result;
 	}
 
@@ -207,6 +214,8 @@ public class ServerConfiguration {
 			return false;
 		if (sendDbMessagePeriod != other.sendDbMessagePeriod)
 			return false;
+		if (useUdp != other.useUdp)
+			return false;
 		return true;
 	}
 
@@ -218,7 +227,7 @@ public class ServerConfiguration {
 				+ notificationMessageService + ", heartBeatSeconds=" + heartBeatSeconds + ", heartBeatFailedCount="
 				+ heartBeatFailedCount + ", sendDbMessagePeriod=" + sendDbMessagePeriod + ", requestSequence="
 				+ requestSequence + ", responseSequence=" + responseSequence + ", listeners=" + listeners + ", port="
-				+ port + "]";
+				+ port + ", useUdp=" + useUdp + "]";
 	}
 
 }

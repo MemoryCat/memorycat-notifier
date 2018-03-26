@@ -19,11 +19,13 @@ public class ClientConfiguration {
 	private final List<MPushClientListener> listeners = new LinkedList<MPushClientListener>();
 	private final String serverHost;
 	private final int port;
+	private final boolean useUdp;
 
-	public ClientConfiguration(String serverHost, int port) {
+	public ClientConfiguration(String serverHost, int port, boolean useUdp) {
 		super();
 		this.serverHost = serverHost;
 		this.port = port;
+		this.useUdp = useUdp;
 	}
 
 	public int getPort() {
@@ -70,6 +72,10 @@ public class ClientConfiguration {
 		this.clientUser = clientUser;
 	}
 
+	public boolean isUseUdp() {
+		return useUdp;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -78,8 +84,11 @@ public class ClientConfiguration {
 		result = prime * result + ((ioSession == null) ? 0 : ioSession.hashCode());
 		result = prime * result + ((listeners == null) ? 0 : listeners.hashCode());
 		result = prime * result + ((mPushMessageClient == null) ? 0 : mPushMessageClient.hashCode());
+		result = prime * result + port;
 		result = prime * result + ((requestSequence == null) ? 0 : requestSequence.hashCode());
 		result = prime * result + ((responseSequence == null) ? 0 : responseSequence.hashCode());
+		result = prime * result + ((serverHost == null) ? 0 : serverHost.hashCode());
+		result = prime * result + (useUdp ? 1231 : 1237);
 		return result;
 	}
 
@@ -112,6 +121,8 @@ public class ClientConfiguration {
 				return false;
 		} else if (!mPushMessageClient.equals(other.mPushMessageClient))
 			return false;
+		if (port != other.port)
+			return false;
 		if (requestSequence == null) {
 			if (other.requestSequence != null)
 				return false;
@@ -122,6 +133,13 @@ public class ClientConfiguration {
 				return false;
 		} else if (!responseSequence.equals(other.responseSequence))
 			return false;
+		if (serverHost == null) {
+			if (other.serverHost != null)
+				return false;
+		} else if (!serverHost.equals(other.serverHost))
+			return false;
+		if (useUdp != other.useUdp)
+			return false;
 		return true;
 	}
 
@@ -129,7 +147,8 @@ public class ClientConfiguration {
 	public String toString() {
 		return "ClientConfiguration [mPushMessageClient=" + mPushMessageClient + ", clientUser=" + clientUser
 				+ ", ioSession=" + ioSession + ", requestSequence=" + requestSequence + ", responseSequence="
-				+ responseSequence + ", listeners=" + listeners + "]";
+				+ responseSequence + ", listeners=" + listeners + ", serverHost=" + serverHost + ", port=" + port
+				+ ", useUdp=" + useUdp + "]";
 	}
 
 }

@@ -7,9 +7,11 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 
 import org.apache.mina.core.future.ConnectFuture;
+import org.apache.mina.core.service.IoConnector;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioDatagramConnector;
+import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,11 +26,13 @@ import com.memorycat.module.notifier.mpush.model.MPushMessageModel;
 import com.memorycat.module.notifier.mpush.model.MPushMessageType;
 import com.memorycat.module.notifier.mpush.protocol.MPushMessageProtocolFactory;
 import com.memorycat.module.notifier.mpush.util.MPushMessageMd5Coder;
-import com.memorycat.module.notifier.util.DhEncryptUtil;
+import com.memorycat.module.notifier.util.EncryptUtil;
 
 public class MPushMessageClientImpl implements MPushMessageClient {
 	private static final Logger logger = LoggerFactory.getLogger(MPushMessageClientImpl.class);
-	private final NioDatagramConnector nioDatagramConnector = new NioDatagramConnector();
+	// private final IoConnector ioConnector = new
+	// NioSocketConnector();//NioDatagramConnector();
+	private final IoConnector ioConnector ;
 	private final ClientConfiguration clientConfiguration;
 
 	public MPushMessageClientImpl(ClientConfiguration clientConfiguration) {
@@ -37,13 +41,17 @@ public class MPushMessageClientImpl implements MPushMessageClient {
 			throw new NullPointerException();
 		}
 		this.clientConfiguration = clientConfiguration;
+		if(this.clientConfiguration.isUseUdp()) {
+			this.ioConnector= new NioDatagramConnector();
+		}else {
+			this.ioConnector= new NioSocketConnector();
+		}
 
-		nioDatagramConnector.getSessionConfig().setReuseAddress(true);
-		nioDatagramConnector.getFilterChain().addFirst("log", new LoggingFilter());
-		nioDatagramConnector.getFilterChain().addLast("codec",
-				new ProtocolCodecFilter(new MPushMessageProtocolFactory()));
-		nioDatagramConnector.setHandler(new ClientMessageHandler(this));
-		ConnectFuture connectFuture = nioDatagramConnector.connect(
+		// ioConnector.getSessionConfig().setReuseAddress(true);
+		ioConnector.getFilterChain().addFirst("log", new LoggingFilter());
+		ioConnector.getFilterChain().addLast("codec", new ProtocolCodecFilter(new MPushMessageProtocolFactory()));
+		ioConnector.setHandler(new ClientMessageHandler(this));
+		ConnectFuture connectFuture = ioConnector.connect(
 				new InetSocketAddress(this.clientConfiguration.getServerHost(), this.clientConfiguration.getPort()));
 		try {
 			connectFuture.await();
@@ -78,7 +86,7 @@ public class MPushMessageClientImpl implements MPushMessageClient {
 
 		ClientUser clientUser = this.getClientConfiguration().getClientUser();
 
-		if ((clientUser.getServerKey() == null || clientUser.getServerKey().length == 0)
+		if ((clientUser.getServerKey() == null )
 				&& !(MPushMessageType.AUTH_ENCRYPT_REQUEST == mPushMessageModel.getMessageType())) {
 			// ?丢弃消息？ 或是发送加密重试请求
 			logger.debug("丢弃原消息，应先请求加密。" + mPushMessageModel);
@@ -88,9 +96,14 @@ public class MPushMessageClientImpl implements MPushMessageClient {
 			if (MPushMessageType.AUTH_ENCRYPT_REQUEST != mPushMessageModel.getMessageType()) {
 				synchronized (mPushMessageModel) {
 					// 加密body
-					byte[] encode = DhEncryptUtil.encode(clientUser.getServerKey(), clientUser.getPrivateKey(),
-							mPushMessageModel.getBody());
-					mPushMessageModel.setBody(encode);
+					try {
+						mPushMessageModel.setBody(EncryptUtil.encode(clientUser.getServerKey(),
+								clientUser.getPrivateKey(), mPushMessageModel.getBody()));
+					} catch (Exception e) {
+						logger.warn(e.getLocalizedMessage(), e);
+						e.printStackTrace();
+						throw e;
+					}
 				}
 			}
 		}
@@ -114,7 +127,7 @@ public class MPushMessageClientImpl implements MPushMessageClient {
 	}
 
 	public static void main(String[] args) throws Exception {
-		ClientConfiguration clientConfiguration = new ClientConfiguration("localhost", 12345);
+		ClientConfiguration clientConfiguration = new ClientConfiguration("localhost", 12345,false);
 		clientConfiguration.getClientUser().setAuthenticator(new Authenticator() {
 			@Override
 			public AuthenticatedResult login() throws AuthenticationException {

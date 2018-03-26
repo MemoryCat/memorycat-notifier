@@ -18,7 +18,7 @@ import com.memorycat.module.notifier.mpush.model.MPushMessageType;
 import com.memorycat.module.notifier.mpush.server.auth.ServerAuthenticatedResult;
 import com.memorycat.module.notifier.mpush.server.config.ServerConfiguration;
 import com.memorycat.module.notifier.mpush.server.model.LoginUser;
-import com.memorycat.module.notifier.util.DhEncryptUtil;
+import com.memorycat.module.notifier.util.EncryptUtil;
 
 public class MPushMessageServerMessageDisptcher {
 
@@ -50,11 +50,12 @@ public class MPushMessageServerMessageDisptcher {
 		LoginUser loginUser = this.mPushMessageServer.getServerConfiguration().getLoginUserManager()
 				.getLoginUser(context);
 		if (mPushMessageModel.getMessageType() == MPushMessageType.AUTH_ENCRYPT_REQUEST) {
-			loginUser.setClientKey(mPushMessageModel.getBody());
+//			loginUser.setClientKey(mPushMessageModel.getBody());
+			loginUser.setClientKey(EncryptUtil.getPublicKeyFromByteArray(mPushMessageModel.getBody()));
 			this.sendResponseEntryptment(loginUser, mPushMessageModel, context);
 		} else {
 			byte[] body = mPushMessageModel.getBody();
-			byte[] decode = DhEncryptUtil.decode(loginUser.getClientKey(), loginUser.getPrivateKey(), body);
+			byte[] decode = EncryptUtil.decode(loginUser.getClientKey(), loginUser.getPrivateKey(), body);
 			mPushMessageModel.setBody(decode);
 			mPushMessageModel.setBodyLenth((short) decode.length);
 
@@ -62,7 +63,7 @@ public class MPushMessageServerMessageDisptcher {
 					.isValid(loginUser);
 
 			ServerConfiguration serverConfiguration = this.mPushMessageServer.getServerConfiguration();
-			if (null == loginUser.getClientKey() || loginUser.getClientKey().length <= 0) {
+			if (null == loginUser.getClientKey() ) {
 				logger.debug("消息丢弃，应先交换加密密钥：" + mPushMessageModel);
 				this.sendRetryEncryptment(loginUser, context);
 			} else if (valid == false && mPushMessageModel.getMessageType() != MPushMessageType.AUTH_LOGIN_REQUEST) {
